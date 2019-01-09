@@ -7,6 +7,7 @@ package me.parozzz.customentity.types;
 
 import me.parozzz.customentity.NMSMobMeta;
 import net.minecraft.server.v1_13_R2.*;
+import net.minecraft.server.v1_13_R2.Entity;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -220,35 +221,41 @@ public final class CreatureType<BKT extends Mob, NMS extends EntityInsentient> i
 
     private static Map<EntityType, CreatureType> ENTITY_TYPE_MAP;
     private static Map<String, CreatureType> NAME_MAP;
+    private static Map<Class<? extends EntityInsentient>, CreatureType> CLASS_MAP;
 
     private static <T extends Mob, H extends EntityInsentient> CreatureType get(Class<T> bukkitClass, Class<H> nmsClass, EntityTypes<H> nmsEntityType, NMSMobMeta mobMeta)
     {
-        if(ENTITY_TYPE_MAP == null)
-        {
+        if (ENTITY_TYPE_MAP == null) {
             ENTITY_TYPE_MAP = new EnumMap<>(EntityType.class);
         }
 
-        if(NAME_MAP == null)
-        {
+        if (NAME_MAP == null) {
             NAME_MAP = new HashMap<>();
+        }
+
+        if (CLASS_MAP == null) {
+            CLASS_MAP = new HashMap<>();
         }
 
         var type = new CreatureType<>(bukkitClass, nmsClass, nmsEntityType, mobMeta);
 
         var entityType = EntityTypes.clsToTypeMap.get(nmsClass);
-        if(entityType == null)
-        {
+        if (entityType == null) {
             Logger.getLogger(CreatureType.class.getName()).warning("Something went wrong while creating a CreatureType. No corresponding bukkit EntityType?");
-        }
-        else
-        {
+        } else {
             type.setBukkitEntityType(entityType);
 
             ENTITY_TYPE_MAP.put(entityType, type);
             NAME_MAP.put(entityType.name().toLowerCase(), type);
+            CLASS_MAP.put(nmsClass, type);
         }
 
         return type;
+    }
+
+    public static <T extends EntityInsentient> CreatureType<?, T> getByEntityClass(Class<T> nmsClass)
+    {
+        return (CreatureType<?, T>) CLASS_MAP.get(nmsClass);
     }
 
     public static CreatureType getByEntityType(final EntityType et)
@@ -346,8 +353,7 @@ public final class CreatureType<BKT extends Mob, NMS extends EntityInsentient> i
     public NMS spawnNMS(World world, @Nullable Location loc)
     {
         var nmsEntity = spawnNMS(world);
-        if(loc != null && nmsEntity != null)
-        {
+        if (loc != null && nmsEntity != null) {
             nmsEntity.setLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
         }
 

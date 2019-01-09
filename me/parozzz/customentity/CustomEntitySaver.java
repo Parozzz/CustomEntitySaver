@@ -115,6 +115,25 @@ public class CustomEntitySaver
         return new CustomEntityType<>(customClass, customEntityNMSEntityType);
     }
 
+    /**
+     * Allows to revert mob spawning to custom entities to vanilla entities.
+     * @param customEntityType The custom entity type to revert
+     * @param <T> The type of the entity
+     */
+    public static <T extends EntityInsentient> void revertSpawnToVanilla(CustomEntityType<T> customEntityType)
+    {
+        var creatureType = CreatureType.getByEntityClass(customEntityType.getEntityClass());
+        Validate.notNull(creatureType, "Trying to revert spawn to vanilla of an invalid mob?");
+
+        var nmsCreatureType = creatureType.getMobMeta().getNMSCreatureType();
+        StreamSupport.stream(IRegistry.BIOME.spliterator(), false)
+                .map(base -> base.getMobs(nmsCreatureType))
+                .filter(Objects::nonNull)
+                .flatMap(List::stream)
+                .filter(meta -> meta.b == customEntityType.getNMSEntityTypes())
+                .forEach(meta -> meta.b = creatureType.getNMSEntityType());
+    }
+
     public static class SpawnData extends BiomeBase.BiomeMeta
     {
         private final CreatureType creatureType;

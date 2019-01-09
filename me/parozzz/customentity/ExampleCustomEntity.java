@@ -18,6 +18,11 @@ public final class ExampleCustomEntity extends EntityPig
         super(world);
     }
 
+    /**
+     * This is very important to override, otherwise your entity won't be saved and reverted to a vanilla one.
+     * @return The custom EntityTypes.
+     */
+    @Override
     public EntityTypes getEntityType()
     {
         return entityTypes.getNMSEntityTypes();
